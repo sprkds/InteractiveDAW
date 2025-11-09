@@ -11,6 +11,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import Callable, Dict
 
+from . import camera_interface
 from .configuration import AppConfig, load_config, load_default_config
 from .midi_io import open_outputs
 from .music_router import MusicRouter, RouterConfig
@@ -31,8 +32,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--camera",
-        default="camera_interface:get_camera_state",
+        default="laptop_node.camera_interface:get_camera_state",
         help="Import path for get_camera_state callable (module:function).",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable verbose debug logging and full HUD diagnostics.",
     )
     return parser.parse_args()
 
@@ -114,10 +120,16 @@ def _build_router_config(app_config: AppConfig) -> RouterConfig:
 
 async def async_main(args: argparse.Namespace) -> None:
     config = load_config(args.config) if args.config else load_default_config()
-    logging.basicConfig(level=getattr(logging, config.logging.level.upper(), logging.INFO))
+    # When --debug is provided, escalate to DEBUG regardless of config
+    log_level = logging.DEBUG if args.debug else getattr(logging, config.logging.level.upper(), logging.INFO)
+    logging.basicConfig(level=log_level)
 
     midi_outputs = open_outputs(config.midi.musical_port, config.midi.control_port)
     pi_client = PiClient(config.osc.host, config.osc.port)
+    camera_interface.configure_from_app_config(config)
+    # Enable/disable HUD debug overlays
+    if hasattr(camera_interface, "set_debug_mode"):
+        camera_interface.set_debug_mode(bool(args.debug))
     camera_fn = resolve_camera_callable(args.camera)
     router = MusicRouter(
         midi_outputs,

@@ -105,6 +105,8 @@ class MusicRouter:
             return
 
         self._release_note()
+        # Print the pitch decision at INFO level for visibility during runs
+        LOGGER.info("Pitch from distance: dist_cm=%.1f -> note=%d", sensor_state.dist_cm, note)
         send_note_on(
             self._midi,
             channel=self._config.lead_channel,

@@ -51,6 +51,13 @@ class LoggingConfig:
 
 
 @dataclass(frozen=True)
+class CameraConfig:
+    index: int = 0
+    hud_enabled: bool = True
+    flip: bool = False
+
+
+@dataclass(frozen=True)
 class AppConfig:
     osc: OscConfig
     router: RouterSettings
@@ -59,6 +66,7 @@ class AppConfig:
     mapping: NoteMapping
     logging: LoggingConfig
     instrument_map: dict
+    camera: CameraConfig
 
 
 def load_config(path: Path) -> AppConfig:
@@ -94,6 +102,7 @@ def load_config(path: Path) -> AppConfig:
         mapping=mapping,
         logging=LoggingConfig(level=str(raw.get("logging", {}).get("level", "INFO"))),
         instrument_map=dict(raw.get("instrument_map", {})),
+        camera=_parse_camera(raw.get("camera", {})),
     )
 
 
@@ -112,6 +121,16 @@ def _parse_midi(raw: Any) -> MidiConfig:
     )
 
 
+def _parse_camera(raw: Any) -> CameraConfig:
+    if not isinstance(raw, dict):
+        raw = {}
+    return CameraConfig(
+        index=int(raw.get("index", 0)),
+        hud_enabled=bool(raw.get("hud_enabled", True)),
+        flip=bool(raw.get("flip", False)),
+    )
+
+
 def load_default_config() -> AppConfig:
     """Load the default config.yaml shipped with the package."""
     path = Path(__file__).resolve().parent / "config.yaml"
@@ -120,6 +139,7 @@ def load_default_config() -> AppConfig:
 
 __all__ = [
     "AppConfig",
+    "CameraConfig",
     "LoggingConfig",
     "MidiConfig",
     "OscConfig",

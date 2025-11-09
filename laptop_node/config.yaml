@@ -28,6 +28,11 @@ mapping:
 logging:
   level: INFO
 
+camera:
+  index: 1
+  hud_enabled: true
+  flip: true
+
 # Camera instrument label → behavior map
 instrument_map:
   kick:
