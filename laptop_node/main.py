@@ -13,6 +13,7 @@ from typing import Callable, Dict
 
 from . import camera_interface
 from .configuration import AppConfig, load_config, load_default_config
+from .mapping import scale_fn_from_names
 from .midi_io import open_outputs
 from .music_router import MusicRouter, RouterConfig
 from .pi_client import PiClient
@@ -99,6 +100,16 @@ def _build_router_config(app_config: AppConfig) -> RouterConfig:
     midi = app_config.midi
     transport = app_config.transport
     router = app_config.router
+    # Optional scale function setup
+    scale_fn = None
+    if getattr(app_config, "scale", None) and app_config.scale.enabled and app_config.scale.pitch_classes:
+        try:
+            # Build scale function from configured pitch class names
+            scale_fn = scale_fn_from_names(app_config.scale.pitch_classes)
+            LOGGER.info("Scale enabled with pitch classes: %s", ",".join(app_config.scale.pitch_classes))
+        except Exception as exc:
+            LOGGER.warning("Invalid scale config: %s", exc)
+            scale_fn = None
     return RouterConfig(
         mapping=app_config.mapping,
         instrument_map=app_config.instrument_map,
@@ -115,6 +126,7 @@ def _build_router_config(app_config: AppConfig) -> RouterConfig:
         watchdog_s=router.watchdog_s,
         auto_insert_on_instrument_change=router.auto_insert_track_on_instrument_change,
         insert_on_record_start=router.auto_insert_track_on_record_start,
+        scale_fn=scale_fn,
     )
 
 

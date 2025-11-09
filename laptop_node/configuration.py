@@ -51,6 +51,12 @@ class LoggingConfig:
 
 
 @dataclass(frozen=True)
+class ScaleConfig:
+    enabled: bool = False
+    pitch_classes: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class CameraConfig:
     index: int = 0
     hud_enabled: bool = True
@@ -67,6 +73,7 @@ class AppConfig:
     logging: LoggingConfig
     instrument_map: dict
     camera: CameraConfig
+    scale: ScaleConfig
 
 
 def load_config(path: Path) -> AppConfig:
@@ -103,6 +110,7 @@ def load_config(path: Path) -> AppConfig:
         logging=LoggingConfig(level=str(raw.get("logging", {}).get("level", "INFO"))),
         instrument_map=dict(raw.get("instrument_map", {})),
         camera=_parse_camera(raw.get("camera", {})),
+        scale=_parse_scale(raw.get("scale", {})),
     )
 
 
@@ -131,6 +139,13 @@ def _parse_camera(raw: Any) -> CameraConfig:
     )
 
 
+def _parse_scale(raw: Any) -> ScaleConfig:
+    if not isinstance(raw, dict):
+        return ScaleConfig(enabled=False, pitch_classes=())
+    enabled = bool(raw.get("enabled", False))
+    names = tuple(str(x) for x in raw.get("pitch_classes", ()))
+    return ScaleConfig(enabled=enabled, pitch_classes=names)
+
 def load_default_config() -> AppConfig:
     """Load the default config.yaml shipped with the package."""
     path = Path(__file__).resolve().parent / "config.yaml"
@@ -139,6 +154,7 @@ def load_default_config() -> AppConfig:
 
 __all__ = [
     "AppConfig",
+    "ScaleConfig",
     "CameraConfig",
     "LoggingConfig",
     "MidiConfig",

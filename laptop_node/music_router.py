@@ -5,9 +5,9 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from time import perf_counter
-from typing import Optional
+from typing import Optional, Callable
 
-from .mapping import NoteMapping, quantize_note
+from .mapping import NoteMapping, quantize_note, ScaleFn
 from .midi_io import (
     MidiOutputs,
     send_control_change,
@@ -19,7 +19,16 @@ from .state import AppState, RouterState, SensorState
 
 LOGGER = logging.getLogger(__name__)
 
-DIST_STEP_CM = 5.0  # Snap distance to 1.0 cm buckets to reduce note flutter
+DIST_STEP_CM = 1.0  # Snap distance to 1.0 cm buckets to reduce note flutter
+
+NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+
+def midi_note_to_name(note: int) -> str:
+    """Convert a MIDI note number to a note name with octave (e.g., C4, A#3)."""
+    name = NOTE_NAMES[note % 12]
+    octave = (note // 12) - 1
+    return f"{name}{octave}"
 
 
 @dataclass(frozen=True)
@@ -41,6 +50,7 @@ class RouterConfig:
     watchdog_s: float
     auto_insert_on_instrument_change: bool = False
     insert_on_record_start: bool = False
+    scale_fn: Optional[ScaleFn] = None
 
     @property
     def countin_duration(self) -> float:
@@ -54,6 +64,7 @@ class MusicRouter:
         self._midi = midi
         self._config = config
         self._state = RouterState()
+        self._scale_fn = config.scale_fn
         self._last_camera_state: Optional[str] = None
         self._last_instrument_state: Optional[str] = None
         self._instrument_changed = False
@@ -103,7 +114,7 @@ class MusicRouter:
             return
 
         snapped_dist = round(sensor_state.dist_cm / DIST_STEP_CM) * DIST_STEP_CM
-        note = quantize_note(snapped_dist, self._config.mapping)
+        note = quantize_note(snapped_dist, self._config.mapping, self._scale_fn)
         if self._state.held_note == note:
             return
 
@@ -116,7 +127,7 @@ class MusicRouter:
             note=note,
             velocity=self._config.lead_velocity,
         )
-        LOGGER.debug("NoteOn sent note=%s", note)
+        LOGGER.debug("NoteOn sent note=%s (%s)", note, midi_note_to_name(note))
         self._state.held_note = note
         self._state.last_note_sent = note
         self._state.was_note_playing = True

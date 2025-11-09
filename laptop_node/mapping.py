@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, Optional, Iterable, Set
 
 
 ScaleFn = Callable[[int], int]
@@ -73,4 +73,68 @@ __all__ = [
     "interpolate_note",
     "quantize_note",
 ]
+
+# ---------------- Scale helpers ----------------
+
+# Map common note names to pitch classes (MIDI % 12). Support flats and sharps.
+NOTE_NAME_TO_PC = {
+    "C": 0,
+    "C#": 1,
+    "Db": 1,
+    "D": 2,
+    "D#": 3,
+    "Eb": 3,
+    "E": 4,
+    "Fb": 4,
+    "E#": 5,
+    "F": 5,
+    "F#": 6,
+    "Gb": 6,
+    "G": 7,
+    "G#": 8,
+    "Ab": 8,
+    "A": 9,
+    "A#": 10,
+    "Bb": 10,
+    "B": 11,
+    "Cb": 11,
+    "B#": 0,
+}
+
+
+def scale_fn_from_pitch_classes(allowed_pitch_classes: Iterable[int]) -> ScaleFn:
+    """Return a function that maps a MIDI note to the nearest note within the given scale.
+
+    allowed_pitch_classes is a collection of integers 0..11. The returned function
+    will search up to +/- 6 semitones to find the nearest note whose pitch class
+    is in the set (ties prefer the lower note).
+    """
+    pcs: Set[int] = {pc % 12 for pc in allowed_pitch_classes}
+
+    def _map(note: int) -> int:
+        base_pc = note % 12
+        if base_pc in pcs:
+            return note
+        # Search outward for the nearest allowed pitch class
+        for delta in range(1, 7):
+            down = note - delta
+            up = note + delta
+            if down % 12 in pcs:
+                return down
+            if up % 12 in pcs:
+                return up
+        return note
+
+    return _map
+
+
+def scale_fn_from_names(names: Iterable[str]) -> ScaleFn:
+    """Convenience wrapper: build a scale fn from note names like ['Db','Eb','F',...]."""
+    pcs = []
+    for name in names:
+        key = str(name).strip()
+        if key not in NOTE_NAME_TO_PC:
+            raise ValueError(f"Unknown note name in scale: {name!r}")
+        pcs.append(NOTE_NAME_TO_PC[key])
+    return scale_fn_from_pitch_classes(pcs)
 
