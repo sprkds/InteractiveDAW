@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Optional, Iterable, Set
+from typing import Callable, Optional, Iterable, Set, Sequence
 
 
 ScaleFn = Callable[[int], int]
@@ -137,4 +137,39 @@ def scale_fn_from_names(names: Iterable[str]) -> ScaleFn:
             raise ValueError(f"Unknown note name in scale: {name!r}")
         pcs.append(NOTE_NAME_TO_PC[key])
     return scale_fn_from_pitch_classes(pcs)
+
+
+def absolute_scale_fn_from_notes(allowed_notes: Sequence[int]) -> ScaleFn:
+    """Return a function that snaps any MIDI note to the nearest in allowed_notes.
+
+    Ties prefer the lower note.
+    """
+    allowed: list[int] = sorted(int(n) for n in allowed_notes)
+    if not allowed:
+        raise ValueError("absolute_scale_fn_from_notes requires at least one note")
+
+    def _map(note: int) -> int:
+        # Binary search for nearest
+        lo, hi = 0, len(allowed) - 1
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            if allowed[mid] < note:
+                lo = mid + 1
+            elif allowed[mid] > note:
+                hi = mid - 1
+            else:
+                return note
+        # lo is first greater element index; hi is last less-or-equal
+        cand_hi = allowed[hi] if 0 <= hi < len(allowed) else None
+        cand_lo = allowed[lo] if 0 <= lo < len(allowed) else None
+        if cand_hi is None:
+            return cand_lo  # type: ignore[return-value]
+        if cand_lo is None:
+            return cand_hi  # type: ignore[return-value]
+        # pick nearest; tie => lower (cand_hi)
+        if abs(cand_lo - note) < abs(note - cand_hi):
+            return cand_lo
+        return cand_hi
+
+    return _map
 

@@ -65,6 +65,8 @@ class MusicRouter:
         self._config = config
         self._state = RouterState()
         self._scale_fn = config.scale_fn
+        self._current_lead_channel: int = config.lead_channel
+        self._instrument_order: list[str] = list(config.instrument_map.keys())
         self._last_camera_state: Optional[str] = None
         self._last_instrument_state: Optional[str] = None
         self._instrument_changed = False
@@ -123,7 +125,7 @@ class MusicRouter:
         LOGGER.info("Pitch from distance: dist_cm=%.1f -> note=%d", sensor_state.dist_cm, note)
         send_note_on(
             self._midi,
-            channel=self._config.lead_channel,
+            channel=self._current_lead_channel,
             note=note,
             velocity=self._config.lead_velocity,
         )
@@ -155,7 +157,7 @@ class MusicRouter:
             return
         send_note_off(
             self._midi,
-            channel=self._config.lead_channel,
+            channel=self._current_lead_channel,
             note=self._state.held_note,
             velocity=0,
         )
@@ -222,11 +224,27 @@ class MusicRouter:
             self._current_drum_note = int(entry.get("note", self._config.drum_note))
         else:
             self._current_is_drum = False
+            # Channel selection: if entry has channel override, use it;
+            # otherwise derive from instrument position (finger count) → channel = index+1
+            channel_override = entry.get("channel")
+            if channel_override is not None:
+                try:
+                    ch = int(channel_override)
+                    if 1 <= ch <= 16:
+                        self._current_lead_channel = ch
+                except Exception:  # pragma: no cover
+                    self._current_lead_channel = self._config.lead_channel
+            else:
+                try:
+                    idx = self._instrument_order.index(label)
+                    self._current_lead_channel = max(1, min(16, idx + 1))
+                except ValueError:
+                    self._current_lead_channel = self._config.lead_channel
             program = entry.get("program")
             if program is not None:
                 try:
-                    send_program_change(self._midi, self._config.lead_channel, int(program))
-                    LOGGER.info("Program change sent: program=%s on ch %s", program, self._config.lead_channel)
+                    send_program_change(self._midi, self._current_lead_channel, int(program))
+                    LOGGER.info("Program change sent: program=%s on ch %s", program, self._current_lead_channel)
                 except Exception as exc:  # pragma: no cover
                     LOGGER.debug("Program change failed: %s", exc)
 

@@ -23,8 +23,8 @@ midi:
 mapping:
   d_min_cm: 5
   d_max_cm: 80
-  note_lo: 48
-  note_hi: 72
+  note_lo: 61
+  note_hi: 70
 logging:
   level: INFO
 
@@ -36,18 +36,19 @@ camera:
 # Optional scale: restrict notes to a key
 scale:
   enabled: true
-  pitch_classes: [E, Bb, Eb]
+  absolute_notes: [61, 63, 66, 68]  # Eb4, Gb4, Ab4
+  pitch_classes: [] 
 # Camera instrument label → behavior map
 instrument_map:
   kick:
-    type: drum
-    note: 36      # GM Kick
+    type: lead
+    channel: 1
   snare:
-    type: drum
-    note: 38      # GM Snare
+    type: lead
+    channel: 2
   hihat:
-    type: drum
-    note: 42      # GM Closed Hi-Hat
+    type: lead
+    channel: 3
   trumpet:
     type: lead
     program: 56   # GM Trumpet (0-based program number)

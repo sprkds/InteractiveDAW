@@ -13,7 +13,7 @@ from typing import Callable, Dict
 
 from . import camera_interface
 from .configuration import AppConfig, load_config, load_default_config
-from .mapping import scale_fn_from_names
+from .mapping import scale_fn_from_names, absolute_scale_fn_from_notes
 from .midi_io import open_outputs
 from .music_router import MusicRouter, RouterConfig
 from .pi_client import PiClient
@@ -102,11 +102,14 @@ def _build_router_config(app_config: AppConfig) -> RouterConfig:
     router = app_config.router
     # Optional scale function setup
     scale_fn = None
-    if getattr(app_config, "scale", None) and app_config.scale.enabled and app_config.scale.pitch_classes:
+    if getattr(app_config, "scale", None) and app_config.scale.enabled:
         try:
-            # Build scale function from configured pitch class names
-            scale_fn = scale_fn_from_names(app_config.scale.pitch_classes)
-            LOGGER.info("Scale enabled with pitch classes: %s", ",".join(app_config.scale.pitch_classes))
+            if app_config.scale.absolute_notes:
+                scale_fn = absolute_scale_fn_from_notes(app_config.scale.absolute_notes)
+                LOGGER.info("Scale enabled with absolute notes: %s", ",".join(str(n) for n in app_config.scale.absolute_notes))
+            elif app_config.scale.pitch_classes:
+                scale_fn = scale_fn_from_names(app_config.scale.pitch_classes)
+                LOGGER.info("Scale enabled with pitch classes: %s", ",".join(app_config.scale.pitch_classes))
         except Exception as exc:
             LOGGER.warning("Invalid scale config: %s", exc)
             scale_fn = None

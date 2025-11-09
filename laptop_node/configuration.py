@@ -54,6 +54,7 @@ class LoggingConfig:
 class ScaleConfig:
     enabled: bool = False
     pitch_classes: tuple[str, ...] = ()
+    absolute_notes: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -141,10 +142,11 @@ def _parse_camera(raw: Any) -> CameraConfig:
 
 def _parse_scale(raw: Any) -> ScaleConfig:
     if not isinstance(raw, dict):
-        return ScaleConfig(enabled=False, pitch_classes=())
+        return ScaleConfig(enabled=False, pitch_classes=(), absolute_notes=())
     enabled = bool(raw.get("enabled", False))
     names = tuple(str(x) for x in raw.get("pitch_classes", ()))
-    return ScaleConfig(enabled=enabled, pitch_classes=names)
+    abs_notes = tuple(int(x) for x in raw.get("absolute_notes", ()))
+    return ScaleConfig(enabled=enabled, pitch_classes=names, absolute_notes=abs_notes)
 
 def load_default_config() -> AppConfig:
     """Load the default config.yaml shipped with the package."""
