@@ -36,9 +36,7 @@ camera:
 # Optional scale: restrict notes to a key
 scale:
   enabled: true
-  # Bb natural minor (Industry Baby): Bb, C, Db, Eb, F, Gb, Ab
-  pitch_classes: [Bb, C, Db, Eb, F, Gb, Ab]
-
+  pitch_classes: [E, Bb, Eb]
 # Camera instrument label → behavior map
 instrument_map:
   kick:
