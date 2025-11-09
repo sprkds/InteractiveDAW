@@ -19,6 +19,8 @@ from .state import AppState, RouterState, SensorState
 
 LOGGER = logging.getLogger(__name__)
 
+DIST_STEP_CM = 1.0  # Snap distance to 1.0 cm buckets to reduce note flutter
+
 
 @dataclass(frozen=True)
 class RouterConfig:
@@ -100,7 +102,8 @@ class MusicRouter:
             self._state.was_note_playing = False
             return
 
-        note = quantize_note(sensor_state.dist_cm, self._config.mapping)
+        snapped_dist = round(sensor_state.dist_cm / DIST_STEP_CM) * DIST_STEP_CM
+        note = quantize_note(snapped_dist, self._config.mapping)
         if self._state.held_note == note:
             return
 

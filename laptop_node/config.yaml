@@ -21,8 +21,8 @@ midi:
   record_cc: 20
   insert_track_cc: 21
 mapping:
-  d_min_cm: 15
-  d_max_cm: 60
+  d_min_cm: 5
+  d_max_cm: 80
   note_lo: 48
   note_hi: 72
 logging:
