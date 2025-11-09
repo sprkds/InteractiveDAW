@@ -19,7 +19,7 @@ from .state import AppState, RouterState, SensorState
 
 LOGGER = logging.getLogger(__name__)
 
-DIST_STEP_CM = 1.0  # Snap distance to 1.0 cm buckets to reduce note flutter
+DIST_STEP_CM = 5.0  # Snap distance to 1.0 cm buckets to reduce note flutter
 
 
 @dataclass(frozen=True)
