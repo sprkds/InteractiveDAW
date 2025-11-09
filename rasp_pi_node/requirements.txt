@@ -1,0 +1,4 @@
+pigpio>=1.78
+python-osc>=1.8.3
+PyYAML>=6.0
+

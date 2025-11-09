@@ -1,0 +1,45 @@
+osc:
+  host: 0.0.0.0
+  port: 9000
+router:
+  tick_hz: 100
+  watchdog_s: 0.5
+  auto_insert_track_on_instrument_change: true
+  auto_insert_track_on_record_start: true
+transport:
+  bpm: 120
+  countin_beats: 4
+midi:
+  musical_port: "FromPi 1"
+  control_port: "PiCrtl 2"
+  drum_channel: 10
+  lead_channel: 1
+  control_channel: 1
+  drum_note: 36
+  drum_velocity_default: 100
+  lead_velocity: 90
+  record_cc: 20
+  insert_track_cc: 21
+mapping:
+  d_min_cm: 15
+  d_max_cm: 60
+  note_lo: 48
+  note_hi: 72
+logging:
+  level: INFO
+
+# Camera instrument label → behavior map
+instrument_map:
+  kick:
+    type: drum
+    note: 36      # GM Kick
+  snare:
+    type: drum
+    note: 38      # GM Snare
+  hihat:
+    type: drum
+    note: 42      # GM Closed Hi-Hat
+  trumpet:
+    type: lead
+    program: 56   # GM Trumpet (0-based program number)
+

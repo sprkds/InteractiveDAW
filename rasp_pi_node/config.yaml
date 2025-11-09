@@ -1,0 +1,45 @@
+pins:
+  trig: 18
+  echo: 16
+
+cycle_hz: 100
+timeout_us: 30000
+
+distance:
+  min_cm: 15.0
+  max_cm: 60.0
+  temp_C: 20.0
+
+filters:
+  median_window: 5
+  ema_alpha: 0.25
+
+osc:
+  laptop_ip: 192.168.137.1  # Set to the laptop node IP address
+  port: 9000
+  queue_size: 64
+
+hit:
+  enabled: false
+  threshold_cm: 25.0
+  hysteresis_cm: 2.0
+  refractory_s: 0.2
+  velocity_min: 30
+  velocity_max: 127
+  min_speed_cm_s: 5.0
+  max_speed_cm_s: 120.0
+  fixed_velocity: 100
+
+simulator:
+  enabled: false
+  waveform_cm:
+    - 40.0
+    - 45.0
+    - 50.0
+    - 45.0
+
+logging:
+  level: INFO
+
+print_dist: true
+
